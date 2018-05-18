@@ -1,0 +1,10 @@
+wf_take_smallest : 879
+total calls: 1800244
+wf_estimate : 1075
+total calls: 1828872
+wf_smallest_volume : 7101
+total calls: 16354444
+wf_smallest_and_volume : 957
+total calls: 1817828
+walking_fish : 4455
+total calls: 11142336
