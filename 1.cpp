@@ -112,7 +112,8 @@ struct walking_fish : algo {
 	virtual int make_choice(vector<vector<ints> > &a) {
 		return (int)a.size() - 1;
 	}
-	ints go(vector<vector<ints> > a) {
+
+	ints make_a_step(vector<vector<ints> > a) {
 		go_cnt++;
 		if (a.size() == 0) return 0;
 		if (a.size() == 1) return get_volume(a[0]);
@@ -126,14 +127,16 @@ struct walking_fish : algo {
 		vector<vector<ints> > b = a;
 		b[id] = b.back();
 		b.resize(b.size() - 1);
-
 		ints result = go(b);
-
 		for (int i = 0; i < (int)b.size(); i++) to_min(b[i], p);
 
 		result += get_volume(p) - go(b);
 
 		return result;
+	}
+
+	virtual ints go(vector<vector<ints> > a) {
+		return make_a_step(a);
 	}
 };
 
@@ -317,6 +320,134 @@ struct wf_estimate : walking_fish {
 };
 
 
+struct wf_map_estimate : walking_fish {
+
+	wf_map_estimate() : walking_fish() {}
+	wf_map_estimate(vector<vector<ints> > a) : walking_fish(a) {}
+	virtual string name() {return "wf_map_estimate";}
+
+	map<long long, ints> was;
+	map<long long, ints> was2;
+
+	long long get_hash(vector<vector<ints> > &a) {
+		int n = a.size();
+		if (n <= 1) return 0;
+		vector<int> q1(n, 0);
+		vector<int> q2(n, 0);
+		vector<int> q3(n, 0);
+
+		for (int i = 0; i < d; i++) {
+			int id1 = 0;
+			int id2 = 0;
+
+			int second = 0;
+			for (int j = 1; j < n; j++) {
+				if (a[j][i] < a[id1][i]) {
+					second = id1;
+					id1 = j;
+				} else if (a[j][i] < a[second][i]) {
+					second = j;
+				}
+
+				if (a[j][i] > a[id2][i]) id2 = j;
+			}
+			if (id1 == id2) continue;
+			q1[id1]++;
+			q2[second]++;
+			q3[id2]++;
+		}
+		for (int i = 0; i < n; i++) q1[i] = q1[i] * (n + 2) * (n + 2) + q2[i] * (n + 2) + q3[i] + 1;
+		sort(q1.begin(), q1.end());
+		q1.pb(n);
+
+		long long mod = 1e12 + 7;
+
+		long long ret = 0;
+		for (int x : q1) ret = (ret * 1000007 + x) % mod;
+
+		return ret;
+	}
+
+
+	double estimate(vector<vector<ints> > &a) {
+		if (a.size() <= 1) return 1;
+		make_free(a);
+		long long h = get_hash(a);
+		if (was.count(h)) {
+			return was[h] / 1. / was2[h];
+		} else return -1;
+	}
+
+	int make_choice(vector<vector<ints> > &a) override {
+		int n = a.size();
+		if (n < 5) return wf_take_smallest(d).make_choice(a);
+//		if (n < 5) return walking_fish(d).make_choice(a);
+
+		double best = -1;
+		int id = -1;
+
+//		int go_heur = walking_fish(d).make_choice(a);
+		int go_heur = wf_take_smallest(d).make_choice(a);
+		bool have_est = false;
+
+		for (int i = 0; i < n; i++) {
+			vector<ints> & p = a[i];
+			vector<vector<ints> > b = a;
+			b[i] = b.back();
+			b.resize(b.size() - 1);
+
+			double Et = estimate(b);
+			if (Et < 0) continue;
+
+			for (int j = 0; j < (int)b.size(); j++) to_min(b[j], p);
+
+			double t2 = estimate(b);
+			if (t2 < 0) continue;
+			Et += t2;
+
+			if (i == go_heur) have_est = true;
+
+			if (id == -1 || Et < best) {
+				best = Et;
+				id = i;
+			}
+		}
+		if (!have_est) return go_heur;
+
+		if (id != -1) {
+			return id;
+		}
+		return wf_take_smallest(d).make_choice(a);
+//		return walking_fish(d).make_choice(a);
+	}
+
+	ints go(vector<vector<ints> > a) {
+		long long h = get_hash(a);
+
+		long long t = go_cnt;
+
+
+		ints ret = make_a_step(a);
+		
+		t = go_cnt - t;
+
+		if (was2[h] != 0 && a.size() > 15) {
+			double here = was[h] / 1. / was2[h];
+			double q = max(here, (double)t) / 1. / min(here, (double)t);
+			cout << q << endl;
+		}
+
+		was[h] += t;
+		was2[h]++;
+//		was[h] = t;
+//		was2[h] = 1;
+
+		return ret;
+	}
+};
+
+
+
 
 
 struct timer {
@@ -336,8 +467,8 @@ void time_test2() {
 	srand(0);
 	vector<vector<vector<ints> > > data;
 	int n = 30;
-	for (int it = 0; it < 100; it++) {
-		int d = 10;
+	for (int it = 0; it < 1; it++) {
+		int d = 15;
 		vector<vector<ints> > a;
 		for (int i = 0; i < n; i++) {
 			vector<int> t;
@@ -347,25 +478,34 @@ void time_test2() {
 		algo(d).make_free(a);
 		data.pb(a);
 	}
+	for (int i = 0; i < 2900; i++) data.pb(data.back());
 	vector<algo*> algos;
-	algos.pb(new wf_take_smallest());
-	algos.pb(new wf_estimate());
-	algos.pb(new wf_smallest_volume());
-	algos.pb(new wf_smallest_and_volume());
-	algos.pb(new walking_fish());
+//	algos.pb(new wf_take_smallest());
+//	algos.pb(new wf_estimate());
+	algos.pb(new wf_map_estimate());
+//	algos.pb(new wf_smallest_volume());
+//	algos.pb(new wf_smallest_and_volume());
+//	algos.pb(new walking_fish());
 
 	timer T;
 	for (algo * A : algos) {
 		T.start();
 
+		int last = 0;
+
 		for (auto test : data) {
+			T.start();
 			A->load(test);
 			A->eval();
-		}				
-
 		T.show(A->name() + " :");
 		walking_fish * g = static_cast<walking_fish *>(A);
-		cerr << "total calls: " << g->go_cnt << endl;
+		cerr << "total calls: " << (g->go_cnt) - last << endl;
+		last = (g->go_cnt);
+		}				
+
+//		T.show(A->name() + " :");
+//		walking_fish * g = static_cast<walking_fish *>(A);
+//		cerr << "total calls: " << g->go_cnt << endl;
 	}
 }
 
