@@ -1,0 +1,58 @@
+wf_take_smallest : 395
+total calls: 523810
+wf_presort : 1748
+total calls: 2855706
+wf_sort : 261
+total calls: 0
+wf_estimate : 445
+total calls: 520498
+wf_smallest_volume : 849
+total calls: 1357982
+wf_smallest_and_volume : 373
+total calls: 505178
+walking_fish : 3561
+total calls: 6071330
+hso_into_wf : 1597
+total calls: 4331981392881336948
+
+
+
+
+wf_take_smallest : 2430
+total calls: 3145238
+wf_presort : 17304
+total calls: 28585374
+wf_sort : 1670
+total calls: 0
+wf_estimate : 4084
+total calls: 3402494
+wf_smallest_volume : 9347
+total calls: 15004058
+walking_fish : 111340
+total calls: 189010218
+hso_into_wf : 17701
+total calls: 4328756216039424596
+  
+
+>>before
+No reference point provided: using the origin
+hv(1) = 120222437794807.0000000000
+Time: 31.328125 (s)
+
+>>after
+C:\cd\dip\Hypervolume-1\WFG>wfg2 after.txt
+No reference point provided: using the origin
+hv(1) = 120222437794807.0000000000
+Time: 26.562500 (s)
+
+>>before
+C:\cd\dip\Hypervolume-1\WFG>wfg2 before.txt
+No reference point provided: using the origin
+hv(1) = 2252627773943635500.0000000000
+Time: 218.562500 (s)
+
+>>after
+C:\cd\dip\Hypervolume-1\WFG>wfg2 after.txt
+No reference point provided: using the origin
+hv(1) = 2252627773943629800.0000000000
+Time: 162.171875 (s)
